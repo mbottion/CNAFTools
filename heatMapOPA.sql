@@ -1,3 +1,26 @@
+set serveroutput on
+begin
+  if (upper('&1') in ('USAGE','HELP','-?','-H'))
+  then
+    raise_application_error(-20000,'
++---------------------------------------------------------------------------------------
+| Usage:
+|    heatMapOPA.sql [start] [end] [interval]    
+|   
+|   extract OPA batches informations from a given period of time and present them in
+|   a heatMap (values). The zones betwen brackets shows the expected run time for 
+|   a given cases number.
+|
+|   Parameters :
+|       start    : Analysis start date (dd/mm/yyyy [hh24:mi:ss])      - Default : Midnight today
+|       end      : Analysis end date   (dd/mm/yyyy [hh24:mi:ss])      - Default : now
+|       interval : interval of cases number used to group the results - Default : 100
+|       
++---------------------------------------------------------------------------------------
+       ');
+  end if ;
+end ;
+/
 -- -----------------------------------------------------------------
 -- paramètres
 -- -----------------------------------------------------------------
