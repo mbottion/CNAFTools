@@ -1,6 +1,6 @@
 set serveroutput on
 begin
-  if (upper('&1') in ('USAGE','HELP','-?','-H')
+  if (upper('&1') in ('USAGE','HELP','-?','-H'))
   then
     raise_application_error(-20000,'Usage:
     
