@@ -2,19 +2,27 @@ set serveroutput on
 begin
   if (upper('&1') in ('USAGE','HELP','-?','-H'))
   then
-    raise_application_error(-20000,'Usage:
-    
-    Parameters :
-       P1: Analysis start date (dd/mm/yyyy [hh24:mi:ss]) - Default : Midnight today
-       P2: Analysis end date   (dd/mm/yyyy [hh24:mi:ss]) - Default : now
-       
-       );'
+    raise_application_error(-20000,'
++---------------------------------------------------------------------------------------
+| Usage:
+|    OPARegis.sql [start] [end]    
+|   
+|   extract OPA batches informations
+|
+|   Parameters :
+|       start  : Analysis start date (dd/mm/yyyy [hh24:mi:ss]) - Default : Midnight today
+|       end    : Analysis end date   (dd/mm/yyyy [hh24:mi:ss]) - Default : now
+|       
++---------------------------------------------------------------------------------------
+       ');
+  end if ;
 end ;
 /
 
-define start_date="nvl('&1',to_char(sysdate,'dd/mm/yyyy'))"
-define end_date="nvl('&2',to_char(sysdate,'dd/mm/yyyy hh24:mi:ss'))"
+define start_date="case when '&1' is null then trunc(sysdate) else to_date('&1','dd/mm/yyyy hh24:mi:ss') end"
+define   end_date="case when '&2' is null then sysdate        else to_date('&2','dd/mm/yyyy hh24:mi:ss') end"
 
+set verify on
 -- -----------------------------------------------------------------
 -- SQL
 -- -----------------------------------------------------------------
@@ -40,8 +48,8 @@ FROM
                 FROM    RDACCENTURE.V_S_DASHBOARD_HIST_OPA
                 WHERE   STATUS ='Completed'
                         AND SUMMARY NOT LIKE '%ORA-%'
---                        AND -- Filtre sur les traitements
---                        START_BUILD_JSON >= to_date('&start_date','dd/mm/yyyy hh24:mi:ss') AND START_BUILD_JSON <= to_date('&end_date','dd/mm/yyyy hh24:mi:ss')
+                        AND -- Filtre sur les traitements
+                        START_BUILD_JSON >= &start_date AND START_BUILD_JSON <= &end_date
         )
 ORDER BY START_CALL_ENGINE ASC
 /
