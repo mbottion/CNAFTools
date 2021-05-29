@@ -28,15 +28,8 @@ end ;
 --
 --  Analysis start date : Default (If before noon, noon yesterday, otherwise noon)
 --
-define start_date_FR="" 
-define start_date_FR="&start_date_FR case" 
-define start_date_FR="&start_date_FR   when '&1' is null then /**/" 
-define start_date_FR="&start_date_FR     case " 
-define start_date_FR="&start_date_FR       when to_number(to_char(sysdate,'hh24')) <12 then trunc(sysdate-1)+0.5 " 
-define start_date_FR="&start_date_FR       else trunc(sysdate)+0.5" 
-define start_date_FR="&start_date_FR      end "
-define start_date_FR="&start_date_FR     else to_date('&1','dd/mm/yyyy hh24:mi:ss') "
-define start_date_FR="&start_date_FR end"
+
+define start_date_FR="case when '&1' is null then round(sysdate)-0.5 else to_date('&1','dd/mm/yyyy hh24:mi:ss') end"
 --
 --  Analysis end date : default now
 --
