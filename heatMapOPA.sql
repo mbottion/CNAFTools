@@ -62,13 +62,6 @@ column "40-50 s" format a12    trunc
 column "50-60 s" format a12    trunc
 column ">=60 s" format a10     trunc
 
---
---   Title for TXT output
---
-column output_format new_value output_format
-select 'TOTO' output_format from dual where 1=2 ;
-prompt output_format
-
 -- -----------------------------------------------------------------
 -- SQL
 -- -----------------------------------------------------------------
