@@ -22,9 +22,12 @@ begin
 end ;
 /
 -- -----------------------------------------------------------------
--- paramètres
+-- Parameters
 -- -----------------------------------------------------------------
 
+--
+--  Analysis start date : Default (If before noon, noon yesterday, otherwise noon)
+--
 define start_date_FR="" 
 define start_date_FR="&start_date_FR case" 
 define start_date_FR="&start_date_FR   when '&1' is null then /**/" 
@@ -34,10 +37,19 @@ define start_date_FR="&start_date_FR       else trunc(sysdate)+0.5"
 define start_date_FR="&start_date_FR      end "
 define start_date_FR="&start_date_FR     else to_date('&1','dd/mm/yyyy hh24:mi:ss') "
 define start_date_FR="&start_date_FR end"
+--
+--  Analysis end date : default now
+--
   define end_date_FR="case when '&2' is null then sysdate else to_date('&2','dd/mm/yyyy hh24:mi:ss') end"
+--
+-- Case number grouping by interval
+--
 define interval_size="case when '&3' is null then 100 else to_number('&3') end"
 
 
+-- -----------------------------------------------------------------
+-- Columns formats
+-- -----------------------------------------------------------------
 column "Cases" format a13      trunc
 column "Calls" format a28      trunc
 column " <2 s" format a12      trunc
@@ -50,7 +62,12 @@ column "40-50 s" format a12    trunc
 column "50-60 s" format a12    trunc
 column ">=60 s" format a10     trunc
 
-
+--
+--   Title for TXT output
+--
+column output_format new_value output_format
+select 'TOTO' output_format from dual where 1=2 ;
+prompt output_format
 
 -- -----------------------------------------------------------------
 -- SQL
