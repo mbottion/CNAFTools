@@ -36,7 +36,7 @@ WITH RECEIVE AS
                 SELECT  SUM(NOMBRE_DEMANDES) AS NB_RECU
                 FROM    TEC.STG_IN_JMS
                 WHERE   STATUS            ='LOADED'
-                        AND TIME_CREATION > TO_DATE('29/05/2021 12:00')
+                        AND TIME_CREATION > &start_date_FR
         )
         ,
         ANO AS
@@ -46,7 +46,8 @@ WITH RECEIVE AS
                         JSON_TABLE (MESSAGE_JSON, '$[*]' COLUMNS ( numeroDossier NUMBER PATH '$.identificationTraitementErreur.indicateursSuiviMatriculaire.numeroDossier'))
                 WHERE   TIME_CREATION > &start_date_FR
         )
-SELECT  SYSDATE                               AS "Date comptage"                   ,
+SELECT  &start_date_FR                        AS "Debut periode",
+        SYSDATE                               AS "Date comptage"                   ,
         T1.NB_RECU                            AS "#Dossiers traites"               ,
         T2.NB_ANO                             AS "#Dossiers distincts en anomalies",
         ROUND((T2.NB_ANO/T1.NB_RECU) * 100,4) AS "% Dossiers rejetes"
