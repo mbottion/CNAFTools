@@ -77,7 +77,7 @@ define I7_Label="40-50s"
 define I8_MaxVal=60
 define I8_Label="50-60s"
 
-define I9_MaxVal=
+--define I9_MaxVal=
 define I9_Label=">= 60s"
 
 -- -----------------------------------------------------------------
@@ -243,7 +243,7 @@ select
    -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   ,case when cases_upper_boundary between min_I1 and max_I1 then '[' else ' ' end ||
    case when nvl(I1,0) = 0 then '          '  
-        else  lpad(case when upper('&analysisType') = 'VALUES' then to_char(I1,'999g999')
+        else  lpad(case when upper(&analysisType) = 'VALUES' then to_char(I1,'999g999')
                         else to_char(round(((I1/CallsPerInt))*100,2),'990d99') || ' % '
                    end ,10)
    end ||
@@ -251,7 +251,7 @@ select
    -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   ,case when cases_upper_boundary between min_I2 and max_I2 then '[' else ' ' end ||
    case when nvl(I2,0) = 0 then '          '  
-        else  lpad(case when upper('&analysisType') = 'VALUES' then to_char(I2,'999g999')
+        else  lpad(case when upper(&analysisType) = 'VALUES' then to_char(I2,'999g999')
                         else to_char(round(((I2/CallsPerInt))*100,2),'990d99') || ' % '
                    end ,10)
    end ||
@@ -259,7 +259,7 @@ select
    -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   ,case when cases_upper_boundary between min_I3 and max_I3 then '[' else ' ' end ||
    case when nvl(I3,0) = 0 then '          '  
-        else  lpad(case when upper('&analysisType') = 'VALUES' then to_char(I3,'999g999')
+        else  lpad(case when upper(&analysisType) = 'VALUES' then to_char(I3,'999g999')
                         else to_char(round(((I3/CallsPerInt))*100,2),'990d99') || ' % '
                    end ,10)
    end ||
@@ -267,7 +267,7 @@ select
    -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   ,case when cases_upper_boundary between min_I4 and max_I4 then '[' else ' ' end ||
    case when nvl(I4,0) = 0 then '          '  
-        else  lpad(case when upper('&analysisType') = 'VALUES' then to_char(I4,'999g999')
+        else  lpad(case when upper(&analysisType) = 'VALUES' then to_char(I4,'999g999')
                         else to_char(round(((I4/CallsPerInt))*100,2),'990d99') || ' % '
                    end ,10)
    end ||
@@ -275,7 +275,7 @@ select
    -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   ,case when cases_upper_boundary between min_I5 and max_I5 then '[' else ' ' end ||
    case when nvl(I5,0) = 0 then '          '  
-        else  lpad(case when upper('&analysisType') = 'VALUES' then to_char(I5,'999g999')
+        else  lpad(case when upper(&analysisType) = 'VALUES' then to_char(I5,'999g999')
                         else to_char(round(((I5/CallsPerInt))*100,2),'990d99') || ' % '
                    end ,10)
    end ||
@@ -283,7 +283,7 @@ select
    -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   ,case when cases_upper_boundary between min_I6 and max_I6 then '[' else ' ' end ||
    case when nvl(I6,0) = 0 then '          '  
-        else  lpad(case when upper('&analysisType') = 'VALUES' then to_char(I6,'999g999')
+        else  lpad(case when upper(&analysisType) = 'VALUES' then to_char(I6,'999g999')
                         else to_char(round(((I6/CallsPerInt))*100,2),'990d99') || ' % '
                    end ,10)
    end ||
@@ -291,7 +291,7 @@ select
    -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   ,case when cases_upper_boundary between min_I7 and max_I7 then '[' else ' ' end ||
    case when nvl(I7,0) = 0 then '          '  
-        else  lpad(case when upper('&analysisType') = 'VALUES' then to_char(I7,'999g999')
+        else  lpad(case when upper(&analysisType) = 'VALUES' then to_char(I7,'999g999')
                         else to_char(round(((I7/CallsPerInt))*100,2),'990d99') || ' % '
                    end ,10)
    end ||
@@ -299,7 +299,7 @@ select
    -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   ,case when cases_upper_boundary between min_I8 and max_I8 then '[' else ' ' end ||
    case when nvl(I8,0) = 0 then '          '  
-        else  lpad(case when upper('&analysisType') = 'VALUES' then to_char(I8,'999g999')
+        else  lpad(case when upper(&analysisType) = 'VALUES' then to_char(I8,'999g999')
                         else to_char(round(((I8/CallsPerInt))*100,2),'990d99') || ' % '
                    end ,10)
    end ||
@@ -307,46 +307,11 @@ select
    -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   ,case when cases_upper_boundary between min_I9 and max_I9 then '[' else ' ' end ||
    case when nvl(I9,0) = 0 then '          '  
-        else  lpad(case when upper('&analysisType') = 'VALUES' then to_char(I9,'999g999')
+        else  lpad(case when upper(&analysisType) = 'VALUES' then to_char(I9,'999g999')
                         else to_char(round(((I9/CallsPerInt))*100,2),'990d99') || ' % '
                    end ,10)
    end ||
    case when cases_upper_boundary between min_I9 and max_I9 then ']' else ' ' end  "&I9_label"
    -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 from pivotOPA pi
-right outer join (      select '00000 - 00000' cases_int , 0  cases_upper_boundary from dual
-                  union select lpad((level-1)*&interval_size,5,'0') || ' - ' || lpad(((level)*&interval_size)-1,5,'0') 
-                              ,level*&interval_size-1 
-                        from dual connect by (level*&interval_size) <=2200
-                 ) all_int on (pi.cases_int= all_int.cases_int)
-join acceptableValues on (1=1)
-UNION
-select
-   '==============='
-  ,' '
-  ,'============='
-  ,'============='
-  ,'============='
-  ,'============='
-  ,'============='
-  ,'============='
-  ,'============='
-  ,'============='
-  ,' '
-from dual
-UNION
-select
-   'Parameters'
-  ,'           --->  '
-  ,'Start Date :'
-  ,to_char(&start_date_FR,'dd/mm/yyyy')
-  ,to_char(&start_date_FR,'hh24:mi:ss')
-  ,'End Date : '
-  ,to_char(&end_date_FR,'dd/mm/yyyy')
-  ,to_char(&end_date_FR,'hh24:mi:ss')
-  ,'Interval : '
-  ,to_char(&interval_size)
-  ,' '
-from dual
-order by 1
-/
+right outer join (      select '00000 - 
