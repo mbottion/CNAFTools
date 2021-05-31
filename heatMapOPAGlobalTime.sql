@@ -1,3 +1,4 @@
+set feedback off
 set serveroutput on
 begin
   if (upper('&1') in ('USAGE','HELP','-?','-H'))
@@ -5,7 +6,7 @@ begin
     raise_application_error(-20000,'
 +---------------------------------------------------------------------------------------
 | Usage:
-|    heatMapOPAGlobalTime.sql [start] [end] [interval] [Type]
+|    heatMapOPAGlobalTime.sql [start] [end] [engine] [Type] [interval]
 |   
 |      Extracts OPA batches informations from a given period of time and present them in
 |   a heatMap (values). The zones betwen brackets shows the acceptable values for 
@@ -16,8 +17,9 @@ begin
 |   Parameters :
 |       start    : Analysis start date (dd/mm/yyyy [hh24:mi:ss])      - Default : Noon (Today or yesterday)
 |       end      : Analysis end date   (dd/mm/yyyy [hh24:mi:ss])      - Default : now
-|       interval : interval of cases number used to group the results - Default : 50
+|       engine   : Engine name                                        - Default : %
 |       Type     : Type of display VALUES/PCT                         - Default : PCT
+|       interval : interval of cases number used to group the results - Default : 50
 |       
 +---------------------------------------------------------------------------------------
        ');
@@ -37,20 +39,24 @@ define start_date_FR="case when '&1' is null then round(sysdate)-0.5 else to_dat
 --
   define end_date_FR="case when '&2' is null then sysdate else to_date('&2','dd/mm/yyyy hh24:mi:ss') end"
 --
--- Case number grouping by interval
+--  Engine name
 --
-define interval_size="case when '&3' is null then 50 else to_number('&3') end"
+define engineName="case when '&3' is null then '%' else '&3' end"
 --
 --  Display Mode
 --
 define analysisType="case when '&4' is null then 'PCT' else upper('&4') end"
+--
+-- Case number grouping by interval
+--
+define interval_size="case when '&5' is null then 50 else to_number('&5') end"
 
 
 -- -----------------------------------------------------------------
 -- Generic SCript - Change values to change the analysis
 -- -----------------------------------------------------------------
 define analysed_value="total_opa"
-define report_title="OPA Global processing time (Network+Processing = &analysed_value) analysis per lot size"
+define report_title="OPA Global time (Network+Processing = &analysed_value) analysis (Engine : &3)"
 
 define maxCasesPerLot=1250
 
@@ -98,7 +104,6 @@ column "&I8_Label" format a12      trunc
 column "&I9_Label" format a10      trunc
 
 
-set feedback off
 Prompt ====================================================================================
 Prompt &report_title
 Prompt ====================================================================================
@@ -190,6 +195,7 @@ with allHist as (
       WHERE   STATUS ='Completed'      AND SUMMARY NOT LIKE '%ORA-%'
       AND START_BUILD_JSON >= &start_date_FR                     
       AND START_BUILD_JSON <= &end_date_FR
+      AND ENGINE_NAME like &engineName
              )
 ,AllData as (
       select
@@ -340,7 +346,7 @@ select
   ,'============='
   ,'============='
   ,'============='
-  ,' '
+  ,'============='
 from dual
 UNION
 select
@@ -369,8 +375,8 @@ select
   ,to_char(&interval_size) || ' cases'
   ,'Max Cases : '
   ,to_char(&maxCasesPerLot)
-  ,''
-  ,' '
+  ,'Engine :'
+  ,&engineName
 from dual
 order by 1,2
 /
