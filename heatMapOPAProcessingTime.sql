@@ -237,11 +237,11 @@ pivot (
 ,acceptableValues as (
   select 
      0     min_I1 , 200   max_I1
-    ,199   min_I2 , 599   max_I2
-    ,599   min_I3 , 1199  max_I3
-    ,1099  min_I4 , 5000  max_I4
-    ,11099 min_I5 , 15000 max_I5
-    ,11099 min_I6 , 15000 max_I6
+    ,199   min_I2 , 399   max_I2
+    ,299   min_I3 , 699   max_I3
+    ,399   min_I4 , 899   max_I4
+    ,499   min_I5 , 1099  max_I5
+    ,599   min_I6 , 1199  max_I6
     ,11099 min_I7 , 15000 max_I7
     ,11099 min_I8 , 15000 max_I8
     ,11099 min_I9 , 15000 max_I9
