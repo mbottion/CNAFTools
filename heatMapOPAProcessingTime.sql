@@ -93,14 +93,14 @@ define I9_Label=">= 30s"
 column ord         noprint
 column "Cases"     format a13      trunc
 column "Calls"     format a28      trunc
-column "&I1_Label" format a12      trunc
-column "&I2_Label" format a12      trunc
-column "&I3_Label" format a12      trunc
-column "&I4_Label" format a12      trunc
-column "&I5_Label" format a12      trunc
-column "&I6_Label" format a12      trunc
-column "&I7_Label" format a12      trunc
-column "&I8_Label" format a12      trunc
+column "&I1_Label" format a10      trunc
+column "&I2_Label" format a10      trunc
+column "&I3_Label" format a10      trunc
+column "&I4_Label" format a10      trunc
+column "&I5_Label" format a10      trunc
+column "&I6_Label" format a10      trunc
+column "&I7_Label" format a10      trunc
+column "&I8_Label" format a10      trunc
 column "&I9_Label" format a10      trunc
 
 
@@ -255,74 +255,74 @@ select
                                                   ' (' || to_char((CallsPerInt/TotalCalls)*100,'990D99') || ' %)' end "Calls"
    -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   ,case when cases_upper_boundary between min_I1 and max_I1 then '[' else ' ' end ||
-   case when nvl(I1,0) = 0 then '          '  
+   case when nvl(I1,0) = 0 then '        '  
         else  lpad(case when upper(&analysisType) = 'VALUES' then to_char(I1,'999g999')
                         else to_char(round(((I1/CallsPerInt))*100,2),'990d99') || '%'
-                   end ,10)
+                   end ,8)
    end ||
    case when cases_upper_boundary between min_I1 and max_I1 then ']' else ' ' end  "&I1_label"
    -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   ,case when cases_upper_boundary between min_I2 and max_I2 then '[' else ' ' end ||
-   case when nvl(I2,0) = 0 then '          '  
+   case when nvl(I2,0) = 0 then '        '  
         else  lpad(case when upper(&analysisType) = 'VALUES' then to_char(I2,'999g999')
                         else to_char(round(((I2/CallsPerInt))*100,2),'990d99') || '%'
-                   end ,10)
+                   end ,8)
    end ||
    case when cases_upper_boundary between min_I2 and max_I2 then ']' else ' ' end  "&I2_label"
    -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   ,case when cases_upper_boundary between min_I3 and max_I3 then '[' else ' ' end ||
-   case when nvl(I3,0) = 0 then '          '  
+   case when nvl(I3,0) = 0 then '        '  
         else  lpad(case when upper(&analysisType) = 'VALUES' then to_char(I3,'999g999')
                         else to_char(round(((I3/CallsPerInt))*100,2),'990d99') || '%'
-                   end ,10)
+                   end ,8)
    end ||
    case when cases_upper_boundary between min_I3 and max_I3 then ']' else ' ' end  "&I3_label"
    -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   ,case when cases_upper_boundary between min_I4 and max_I4 then '[' else ' ' end ||
-   case when nvl(I4,0) = 0 then '          '  
+   case when nvl(I4,0) = 0 then '        '  
         else  lpad(case when upper(&analysisType) = 'VALUES' then to_char(I4,'999g999')
                         else to_char(round(((I4/CallsPerInt))*100,2),'990d99') || '%'
-                   end ,10)
+                   end ,8)
    end ||
    case when cases_upper_boundary between min_I4 and max_I4 then ']' else ' ' end  "&I4_label"
    -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   ,case when cases_upper_boundary between min_I5 and max_I5 then '[' else ' ' end ||
-   case when nvl(I5,0) = 0 then '          '  
+   case when nvl(I5,0) = 0 then '        '  
         else  lpad(case when upper(&analysisType) = 'VALUES' then to_char(I5,'999g999')
                         else to_char(round(((I5/CallsPerInt))*100,2),'990d99') || '%'
-                   end ,10)
+                   end ,8)
    end ||
    case when cases_upper_boundary between min_I5 and max_I5 then ']' else ' ' end  "&I5_label"
    -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   ,case when cases_upper_boundary between min_I6 and max_I6 then '[' else ' ' end ||
-   case when nvl(I6,0) = 0 then '          '  
+   case when nvl(I6,0) = 0 then '        '  
         else  lpad(case when upper(&analysisType) = 'VALUES' then to_char(I6,'999g999')
                         else to_char(round(((I6/CallsPerInt))*100,2),'990d99') || '%'
-                   end ,10)
+                   end ,8)
    end ||
    case when cases_upper_boundary between min_I6 and max_I6 then ']' else ' ' end  "&I6_label"
    -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   ,case when cases_upper_boundary between min_I7 and max_I7 then '[' else ' ' end ||
-   case when nvl(I7,0) = 0 then '          '  
+   case when nvl(I7,0) = 0 then '        '  
         else  lpad(case when upper(&analysisType) = 'VALUES' then to_char(I7,'999g999')
                         else to_char(round(((I7/CallsPerInt))*100,2),'990d99') || '%'
-                   end ,10)
+                   end ,8)
    end ||
    case when cases_upper_boundary between min_I7 and max_I7 then ']' else ' ' end  "&I7_label"
    -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   ,case when cases_upper_boundary between min_I8 and max_I8 then '[' else ' ' end ||
-   case when nvl(I8,0) = 0 then '          '  
+   case when nvl(I8,0) = 0 then '        '  
         else  lpad(case when upper(&analysisType) = 'VALUES' then to_char(I8,'999g999')
                         else to_char(round(((I8/CallsPerInt))*100,2),'990d99') || '%'
-                   end ,10)
+                   end ,8)
    end ||
    case when cases_upper_boundary between min_I8 and max_I8 then ']' else ' ' end  "&I8_label"
    -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   ,case when cases_upper_boundary between min_I9 and max_I9 then '[' else ' ' end ||
-   case when nvl(I9,0) = 0 then '          '  
+   case when nvl(I9,0) = 0 then '        '  
         else  lpad(case when upper(&analysisType) = 'VALUES' then to_char(I9,'999g999')
                         else to_char(round(((I9/CallsPerInt))*100,2),'990d99') || '%'
-                   end ,10)
+                   end ,8)
    end ||
    case when cases_upper_boundary between min_I9 and max_I9 then ']' else ' ' end  "&I9_label"
    -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
