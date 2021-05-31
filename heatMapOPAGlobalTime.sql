@@ -92,7 +92,7 @@ define I9_Label=">= 60s"
 -- -----------------------------------------------------------------
 column ord         noprint
 column "Cases"     format a13      trunc
-column "Calls"     format a20      trunc
+column "Calls"     format a28      trunc
 column "&I1_Label" format a12      trunc
 column "&I2_Label" format a12      trunc
 column "&I3_Label" format a12      trunc
