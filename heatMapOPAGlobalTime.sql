@@ -214,14 +214,14 @@ SELECT
     cases_int
    ,casesRead
    ,case
-     when &analysed_value < 2  then '&I1_label'
-     when &analysed_value < 5  then '&I2_label'
-     when &analysed_value < 10 then '&I3_label'
-     when &analysed_value < 20 then '&I4_label'
-     when &analysed_value < 30 then '&I5_label'
-     when &analysed_value < 40 then '&I6_label'
-     when &analysed_value < 50 then '&I7_label'
-     when &analysed_value < 60 then '&I8_label'
+     when &analysed_value < &I1_MaxVal then '&I1_label'
+     when &analysed_value < &I2_MaxVal then '&I2_label'
+     when &analysed_value < &I3_MaxVal then '&I3_label'
+     when &analysed_value < &I4_MaxVal then '&I4_label'
+     when &analysed_value < &I5_MaxVal then '&I5_label'
+     when &analysed_value < &I6_MaxVal then '&I6_label'
+     when &analysed_value < &I7_MaxVal then '&I7_label'
+     when &analysed_value < &I8_MaxVal then '&I8_label'
      else                           '&I9_label'
     end interv_value
     ,count(*) over (partition by cases_int) CallsPerInt
