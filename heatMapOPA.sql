@@ -5,16 +5,19 @@ begin
     raise_application_error(-20000,'
 +---------------------------------------------------------------------------------------
 | Usage:
-|    heatMapOPA.sql [start] [end] [interval]    
+|    heatMapOPA.sql [start] [end] [interval] [Type]
 |   
-|   extract OPA batches informations from a given period of time and present them in
-|   a heatMap (values). The zones betwen brackets shows the expected run time for 
+|      Extracts OPA batches informations from a given period of time and present them in
+|   a heatMap (values). The zones betwen brackets shows the acceptable values for 
 |   a given cases number.
+|    
+|      Data can be shown as rough values or percetage od total
 |
 |   Parameters :
 |       start    : Analysis start date (dd/mm/yyyy [hh24:mi:ss])      - Default : Noon (Today or yesterday)
 |       end      : Analysis end date   (dd/mm/yyyy [hh24:mi:ss])      - Default : now
-|       interval : interval of cases number used to group the results - Default : 100
+|       interval : interval of cases number used to group the results - Default : 50
+|       Type     : Type of display VALUES/PCT                         - Default : PCT
 |       
 +---------------------------------------------------------------------------------------
        ');
@@ -37,22 +40,62 @@ define start_date_FR="case when '&1' is null then round(sysdate)-0.5 else to_dat
 -- Case number grouping by interval
 --
 define interval_size="case when '&3' is null then 100 else to_number('&3') end"
+--
+--  Display Mode
+--
+define analysisType="case when '&4' is null then 'PCT' else upper('&4') end"
 
+
+-- -----------------------------------------------------------------
+-- Generic SCript - Change values to change the analysis
+-- -----------------------------------------------------------------
+define analysed_value="total_opa"
+
+define maxCasesPerLot=1500
+
+define I1_MaxVal=2
+define I1_Label="< 2s"
+
+define I2_MaxVal=5
+define I2_Label="2 -5 s"
+
+define I3_MaxVal=10
+define I3_Label="5 -10s"
+
+define I4_Label="10-20s"
+define I4_MaxVal=20
+
+define I5_MaxVal=30
+define I5_Label="20-30s"
+
+define I6_MaxVal=40
+define I6_Label="30-40s"
+
+define I7_MaxVal=50
+define I7_Label="40-50s"
+
+define I8_MaxVal=60
+define I8_Label="50-60s"
+
+define I9_MaxVal=
+define I9_Label=">= 60s"
 
 -- -----------------------------------------------------------------
 -- Columns formats
 -- -----------------------------------------------------------------
-column "Cases" format a13      trunc
-column "Calls" format a28      trunc
-column " <2 s" format a12      trunc
-column "2-5 s" format a12      trunc
-column "5-10 s" format a12     trunc
-column "10-20 s" format a12    trunc
-column "20-30 s" format a12    trunc
-column "30-40 s" format a12    trunc
-column "40-50 s" format a12    trunc
-column "50-60 s" format a12    trunc
-column ">=60 s" format a10     trunc
+column "Cases"     format a13      trunc
+column "Calls"     format a28      trunc
+column "&I1_Label" format a12      trunc
+column "&I2_Label" format a12      trunc
+column "&I3_Label" format a12      trunc
+column "&I4_Label" format a12      trunc
+column "&I5_Label" format a12      trunc
+column "&I6_Label" format a12      trunc
+column "&I7_Label" format a12      trunc
+column "&I8_Label" format a12      trunc
+column "&I9_Label" format a10      trunc
+
+
 
 -- -----------------------------------------------------------------
 -- SQL
@@ -153,69 +196,130 @@ with allHist as (
       from
         CleanHist ch2
             )
-,intervTimeOPA as (
+,intervValueOPA as (
 SELECT
    /*+PARALLEL */
     cases_int
    ,casesRead
    ,case
-     when total_opa < 2  then '< 2s'
-     when total_opa < 5  then '2-5s'
-     when total_opa < 10 then '5-10s'
-     when total_opa < 20 then '10-20s'
-     when total_opa < 30 then '20-30s'
-     when total_opa < 40 then '30-40s'
-     when total_opa < 50 then '40-50s'
-     when total_opa < 60 then '50-60s'
-     else                     '>=60s'
-    end interv_time
+     when &analysed_value < 2  then '&I1_label'
+     when &analysed_value < 5  then '&I2_label'
+     when &analysed_value < 10 then '&I3_label'
+     when &analysed_value < 20 then '&I4_label'
+     when &analysed_value < 30 then '&I5_label'
+     when &analysed_value < 40 then '&I6_label'
+     when &analysed_value < 50 then '&I7_label'
+     when &analysed_value < 60 then '&I8_label'
+     else                           '&I9_label'
+    end interv_value
     ,count(*) over (partition by cases_int) CallsPerInt
     ,count(*) over () TotalCalls
 FROM AllData
 )
-,pivotOPA as (select * from intervTimeOPA
+,pivotOPA as (select * from intervValueOPA
 pivot (
-  count(casesRead) for interv_time in ('< 2s' as I1 ,'2-5s'  as I2 ,'5-10s' as I3 ,'10-20s' as I4 ,'20-30s' as I5 ,'30-40s' as I6 ,'40-50s' as I7 ,'50-60s' as I8 ,'>=60s' as I9 )
+  count(casesRead) for interv_time in ('&I1_label' as I1 ,'&I2_label' as I2 ,'&I3_label' as I3 ,'&I4_label' as I4 ,'&I5_label' as I5 
+                                      ,'&I6_label' as I6 ,'&I7_label' as I7 ,'&I8_label' as I8 ,'&I9_label' as I9 )
      )
+)
+,acceptableValues as (
+  select 
+     0     min_I1 , 200   max_I1
+    ,199   min_I2 , 599   max_I2
+    ,599   min_I3 , 1199  max_I3
+    ,1099  min_I4 , 5000  max_I4
+    ,11099 min_I5 , 15000 max_I5
+    ,11099 min_I6 , 15000 max_I6
+    ,11099 min_I7 , 15000 max_I7
+    ,11099 min_I8 , 15000 max_I8
+    ,11099 min_I9 , 15000 max_I9
+  from dual 
 )
 select 
    all_int.cases_int "Cases"
- -- ,all_int.cases_upper_boundary
+--  ,all_int.cases_upper_boundary
   ,case when nvl(CallsPerInt,0) = 0 then ' ' else to_char(CallsPerInt,'999G999G999G999') ||
                                                   ' (' || to_char((CallsPerInt/TotalCalls)*100,'990D99') || ' %)' end "Calls"
-  ,case when cases_upper_boundary between 0 and 200 then '[' else ' ' end ||
-   case when nvl(I1,0) = 0 then '          '  else  lpad(to_char(I1,'999g999') ,10) end ||
-   case when cases_upper_boundary between 0 and 200 then ']' else ' ' end  " <2 s"
-  ,case when cases_upper_boundary between 199 and 599 then '[' else ' ' end ||
-   case when nvl(I2,0) = 0 then '          '  else  lpad(to_char(I2,'999g999') ,10) end ||
-   case when cases_upper_boundary between 199 and 599 then ']' else ' ' end  "2-5 s"
-  ,case when cases_upper_boundary between 599 and 1199 then '[' else ' ' end ||
-   case when nvl(I3,0) = 0 then '          '  else  lpad(to_char(I3,'999g999') ,10) end ||
-   case when cases_upper_boundary between 599 and 1199 then ']' else ' ' end  "5-10 s"
-  ,case when cases_upper_boundary between 1099 and 5000 then '[' else ' ' end ||
-   case when nvl(I4,0) = 0 then '          '  else  lpad(to_char(I4,'999g999') ,10) end ||
-   case when cases_upper_boundary between 1099 and 5000 then ']' else ' ' end  "10-20 s"
-  ,case when cases_upper_boundary between 11099 and 15000 then '[' else ' ' end ||
-   case when nvl(I5,0) = 0 then '          '  else  lpad(to_char(I5,'999g999') ,10) end ||
-   case when cases_upper_boundary between 11099 and 15000 then ']' else ' ' end  "20-30 s"
-  ,case when cases_upper_boundary between 11099 and 15000 then '[' else ' ' end ||
-   case when nvl(I6,0) = 0 then '          '  else  lpad(to_char(I6,'999g999') ,10) end ||
-   case when cases_upper_boundary between 11099 and 15000 then ']' else ' ' end  "30-40 s"
-  ,case when cases_upper_boundary between 11099 and 15000 then '[' else ' ' end ||
-   case when nvl(I7,0) = 0 then '          '  else  lpad(to_char(I7,'999g999') ,10) end ||
-   case when cases_upper_boundary between 11099 and 15000 then ']' else ' ' end  "40-50 s"
-  ,case when cases_upper_boundary between 11099 and 15000 then '[' else ' ' end ||
-   case when nvl(I8,0) = 0 then '          '  else  lpad(to_char(I8,'999g999') ,10) end ||
-   case when cases_upper_boundary between 11099 and 15000 then ']' else ' ' end  "50-60 s"
-  ,case when cases_upper_boundary between 11099 and 15000 then '[' else ' ' end ||
-   case when nvl(I9,0) = 0 then '          '  else  lpad(to_char(I9,'999g999') ,10) end ||
-   case when cases_upper_boundary between 11099 and 15000 then ']' else ' ' end  ">=60 s"
+   -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  ,case when cases_upper_boundary between min_I1 and max_I1 then '[' else ' ' end ||
+   case when nvl(I1,0) = 0 then '          '  
+        else  lpad(case when upper('&analysisType') = 'VALUES' then to_char(I1,'999g999')
+                        else to_char(round(((I1/CallsPerInt))*100,2),'990d99') || ' % '
+                   end ,10)
+   end ||
+   case when cases_upper_boundary between min_I1 and max_I1 then ']' else ' ' end  "&I1_label"
+   -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  ,case when cases_upper_boundary between min_I2 and max_I2 then '[' else ' ' end ||
+   case when nvl(I2,0) = 0 then '          '  
+        else  lpad(case when upper('&analysisType') = 'VALUES' then to_char(I2,'999g999')
+                        else to_char(round(((I2/CallsPerInt))*100,2),'990d99') || ' % '
+                   end ,10)
+   end ||
+   case when cases_upper_boundary between min_I2 and max_I2 then ']' else ' ' end  "&I2_label"
+   -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  ,case when cases_upper_boundary between min_I3 and max_I3 then '[' else ' ' end ||
+   case when nvl(I3,0) = 0 then '          '  
+        else  lpad(case when upper('&analysisType') = 'VALUES' then to_char(I3,'999g999')
+                        else to_char(round(((I3/CallsPerInt))*100,2),'990d99') || ' % '
+                   end ,10)
+   end ||
+   case when cases_upper_boundary between min_I3 and max_I3 then ']' else ' ' end  "&I3_label"
+   -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  ,case when cases_upper_boundary between min_I4 and max_I4 then '[' else ' ' end ||
+   case when nvl(I4,0) = 0 then '          '  
+        else  lpad(case when upper('&analysisType') = 'VALUES' then to_char(I4,'999g999')
+                        else to_char(round(((I4/CallsPerInt))*100,2),'990d99') || ' % '
+                   end ,10)
+   end ||
+   case when cases_upper_boundary between min_I4 and max_I4 then ']' else ' ' end  "&I4_label"
+   -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  ,case when cases_upper_boundary between min_I5 and max_I5 then '[' else ' ' end ||
+   case when nvl(I5,0) = 0 then '          '  
+        else  lpad(case when upper('&analysisType') = 'VALUES' then to_char(I5,'999g999')
+                        else to_char(round(((I5/CallsPerInt))*100,2),'990d99') || ' % '
+                   end ,10)
+   end ||
+   case when cases_upper_boundary between min_I5 and max_I5 then ']' else ' ' end  "&I5_label"
+   -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  ,case when cases_upper_boundary between min_I6 and max_I6 then '[' else ' ' end ||
+   case when nvl(I6,0) = 0 then '          '  
+        else  lpad(case when upper('&analysisType') = 'VALUES' then to_char(I6,'999g999')
+                        else to_char(round(((I6/CallsPerInt))*100,2),'990d99') || ' % '
+                   end ,10)
+   end ||
+   case when cases_upper_boundary between min_I6 and max_I6 then ']' else ' ' end  "&I6_label"
+   -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  ,case when cases_upper_boundary between min_I7 and max_I7 then '[' else ' ' end ||
+   case when nvl(I7,0) = 0 then '          '  
+        else  lpad(case when upper('&analysisType') = 'VALUES' then to_char(I7,'999g999')
+                        else to_char(round(((I7/CallsPerInt))*100,2),'990d99') || ' % '
+                   end ,10)
+   end ||
+   case when cases_upper_boundary between min_I7 and max_I7 then ']' else ' ' end  "&I7_label"
+   -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  ,case when cases_upper_boundary between min_I8 and max_I8 then '[' else ' ' end ||
+   case when nvl(I8,0) = 0 then '          '  
+        else  lpad(case when upper('&analysisType') = 'VALUES' then to_char(I8,'999g999')
+                        else to_char(round(((I8/CallsPerInt))*100,2),'990d99') || ' % '
+                   end ,10)
+   end ||
+   case when cases_upper_boundary between min_I8 and max_I8 then ']' else ' ' end  "&I8_label"
+   -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  ,case when cases_upper_boundary between min_I9 and max_I9 then '[' else ' ' end ||
+   case when nvl(I9,0) = 0 then '          '  
+        else  lpad(case when upper('&analysisType') = 'VALUES' then to_char(I9,'999g999')
+                        else to_char(round(((I9/CallsPerInt))*100,2),'990d99') || ' % '
+                   end ,10)
+   end ||
+   case when cases_upper_boundary between min_I9 and max_I9 then ']' else ' ' end  "&I9_label"
+   -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 from pivotOPA pi
 right outer join (      select '00000 - 00000' cases_int , 0  cases_upper_boundary from dual
                   union select lpad((level-1)*&interval_size,5,'0') || ' - ' || lpad(((level)*&interval_size)-1,5,'0') 
                               ,level*&interval_size-1 
                         from dual connect by (level*&interval_size) <=2200
                  ) all_int on (pi.cases_int= all_int.cases_int)
+join acceptableValues on (1=1)
 UNION
 select
    '==============='
