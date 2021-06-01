@@ -1,7 +1,12 @@
+define P1="&1"
+define P2="&2"
+define P3="&3"
+define P4="&4"
+define P5="&5"
 set feedback off
 set serveroutput on
 begin
-  if (upper('1') in ('USAGE','HELP','-?','-H'))
+  if (upper('&P1') in ('USAGE','HELP','-?','-H'))
   then
     raise_application_error(-20000,'
 +---------------------------------------------------------------------------------------
@@ -12,7 +17,7 @@ begin
 |          - Calls (packets per interval/minute)
 |          - Cases (per interval/minute)
 |          - Miin and max of OPA globale processing(viewed from the applications)
-|          - An "old-school' graph
+|          - An "old-school" graph
 |
 |   Parameters :
 |       start    : Analysis start date (dd/mm/yyyy [hh24:mi:ss])      - Default : Noon (Today or yesterday)
@@ -28,10 +33,6 @@ end ;
 -- -----------------------------------------------------------------
 -- Parameters (use P1 -- PN, to ease script test in SQL*Dev)
 -- -----------------------------------------------------------------
-P1=&1
-P2=&2
-P3=&3
-P4=&4
 --
 --  Analysis start date : Default (If before noon, noon yesterday, otherwise noon)
 --
@@ -47,31 +48,26 @@ define engineName="case when '&P3' is null then '%' else '&P3' end"
 --
 -- Case number grouping by interval
 --
-define interval_size="case when '&P5' is null then 50 else to_number('&P5') end"
+define interval_size="case when '&P4' is null then 60 else to_number('&P4') end"
 
 
--- -----------------------------------------------------------------
--- Generic SCript - Change values to change the analysis
--- -----------------------------------------------------------------
-define analysed_value="total_opa"
 -- -----------------------------------------------------------------
 -- Columns formats
 -- -----------------------------------------------------------------
 column ord                 noprint
-column start_period        format    a20      trunc heading "Start Period"
-column end_period          format    a20      trunc heading "End Periodd"
-column nb_calls            format    a10      trunc heading "Calls"
-column nb_calls_per_minute format    a10      trunc heading "Calls per minute"
-column nb_cases            format    a15      trunc heading "Cases"
-column nb_cases_per_minute format    a10      trunc heading "Cases per minute"
-column avg_time            format    a10      trunc heading "Avg Time"
-column max_time            format    a10      trunc heading "Max Time"
-column avg_time_bar        format    a60      trunc heading "Avg (full=60+ sec)"
-column max_time_bar        format    a120      trunc heading "Max (full=120+ sec)
+column start_period        format    a20          trunc heading "Start Period"
+column end_period          format    a20          trunc heading "End Period"
+column nb_calls            format    999G999      trunc heading "Calls"
+column nb_calls_per_minute format    999D9        trunc heading "Calls/min"
+column nb_cases            format    999G999G999  trunc heading "Cases"
+column nb_cases_per_minute format    999G999      trunc heading "Cases/min"
+column avg_time            format    99D9         trunc heading "Avg Time"
+column max_time            format    99D9         trunc heading "Max Time"
+column avg_time_bar        format    a17          trunc heading "Avg Max=60+ Sec"
+column max_time_bar        format    a32          trunc heading "Max Max=120+ Sec"
 
-Prompt ====================================================================================
-Prompt &report_title
-Prompt ====================================================================================
+break on report
+compute sum label "Sums" of nb_cases nb_calls on report 
 
 -- -----------------------------------------------------------------
 -- SQL
@@ -146,6 +142,7 @@ with allHist as (
         ,ENGINE_NAME
         ,start_call_engine
         ,(trunc(start_call_engine) - to_date('01/01/1970','dd/mm/yyyy'))*24*3600+to_number(to_char(start_call_engine,'SSSSS')) secs_since_epoch
+        --,(trunc(end_call_engine) - to_date('01/01/1970','dd/mm/yyyy'))*24*3600+to_number(to_char(end_call_engine,'SSSSS')) secs_since_epoch
         ,EXTRACT(SECOND FROM(END_CALL_ENGINE-START_CALL_ENGINE) DAY TO SECOND) AS TOTAL_OPA
         ,to_number(REPLACE(TRIM(SUBSTR(SUMMARY,INSTR(SUMMARY,':',1, 1)+1, INSTR(SUMMARY,'-',1, 2) -INSTR(SUMMARY,':',1, 1)-1)),',','.')) AS CasesRead
         ,to_number(REPLACE(TRIM(SUBSTR(SUMMARY,INSTR(SUMMARY,':',1, 2)+1, INSTR(SUMMARY,'-',1, 3) -INSTR(SUMMARY,':',1, 2)-1)),',','.')) AS CasesProcessed
@@ -166,31 +163,30 @@ with allHist as (
   SELECT
      TO_TIMESTAMP('1970-01-01 00:00:00.000', 'YYYY-MM-DD hh24:mi:SS.FF3')  
                  + numtodsinterval(floor((secs_since_epoch/&interval_size))*&interval_size, 'SECOND') start_period
-    ,TO_TIMESTAMP('1970-01-01 00:00:00.000', 'YYYY-MM-DD hh24:mi:SS.FF3')  
-                 + numtodsinterval((floor((secs_since_epoch/&interval_size)+1)*&interval_size)-1, 'SECOND') end_period
+--    ,TO_TIMESTAMP('1970-01-01 00:00:00.000', 'YYYY-MM-DD hh24:mi:SS.FF3')  
+--                 + numtodsinterval((floor((secs_since_epoch/&interval_size)+1)*&interval_size)-1, 'SECOND') end_period
     ,ch2.*
   from
     CleanHist ch2
   )
 select
-   to_char(start_period,'dd/mm/yyyy hh24:mi:ss')                start_period
-  ,to_char(end_period,'dd/mm/yyyy hh24:mi:ss')                  end_period
-  ,count(*)                                                     nb_calls
-  ,to_char(count(*)/(&interval_size/60),'999D99')               nb_calls_per_minute
-  ,to_char(sum(casesRead),'999G999')                            nb_cases
-  ,to_char(sum(casesRead)/(&interval_size/60),'999G999D99')     nb_cases_per_minute
-  ,to_char(avg(total_opa),'999D99')                             avg_time
-  ,to_char(max(total_opa),'999D99')                             max_time
-  ,rpad('=',ceil(avg(total_opa)),'=')                           avg_time_bar
-  ,rpad('=',ceil(max(total_opa)),'=')                           max_time_bar
+   to_char(start_period,'dd/mm/yyyy hh24:mi:ss')                        start_period
+--  ,to_char(end_period,'dd/mm/yyyy hh24:mi:ss')                        end_period
+  ,count(*)                                                             nb_calls
+  ,count(*)/(&interval_size/60)                                         nb_calls_per_minute
+  ,sum(casesRead)                                                       nb_cases
+  ,sum(casesRead)/(&interval_size/60)                                   nb_cases_per_minute
+  ,avg(total_opa)                                                       avg_time
+  ,max(total_opa)                                                       max_time
+  ,'.' || rpad(rpad('=',ceil(avg(total_opa)/4),'='),15,' ') || '.'      avg_time_bar
+  ,'.' || rpad(rpad('=',ceil(max(total_opa)/4),'='),30,' ') || '.'      max_time_bar
 from 
   allData
 group by
    start_period
-  ,end_period
-having
-  max(total_opa) > 20
-order by start_period
+--  ,end_period
+order 
+  by start_period
 /
 
 
