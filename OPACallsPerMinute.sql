@@ -49,7 +49,7 @@ define end_date_FR="case when '&P2' is null then sysdate else to_date('&P2','dd/
 --
 --  MOde (IN/OUT)
 --
-define mode="case when '&P3' is null then 'IN' else '&P3' end"
+define mode="case when '&P3' is null then 'IN' else upper('&P3') end"
 --
 --  Engine name
 --
@@ -57,7 +57,7 @@ define engineName="case when '&P4' is null then '%' else '&P4' end"
 --
 -- Case number grouping by interval
 --
-define interval_size="case when '&P5' is null then 60 else to_number('&P5') end"
+define interval_size="case when '&P5' is null then 60 else &P5 end"
 
 
 define epoch="cast(to_timestamp_tz('1970-01-01 GMT', 'YYYY-MM-DD TZD') as date)"
@@ -79,6 +79,8 @@ column max_time_bar        format    a32          trunc heading "Max Max=120+ Se
 
 break on report
 compute sum label "Sums" of nb_cases nb_calls on report 
+
+set verify on
 
 -- -----------------------------------------------------------------
 -- SQL
