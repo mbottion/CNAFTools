@@ -12,7 +12,7 @@ begin
     raise_application_error(-20000,'
 +---------------------------------------------------------------------------------------
 | Usage:
-|    OPACallsPerMinuteINPerfs.sql [start] [end] [mode] [engine] [interval] 
+|    OPACallsPerMinuteINPerfs.sql [start] [end] [mode] [interval] [engine]
 |   
 |      Agregates OPA Execution from the dashbord and shows for each interval :
 |          - Calls (packets per interval/minute)
@@ -27,8 +27,8 @@ begin
 |       start    : Analysis start date (dd/mm/yyyy [hh24:mi:ss])      - Default : Noon (Today or yesterday)
 |       end      : Analysis end date   (dd/mm/yyyy [hh24:mi:ss])      - Default : now
 |       mode     : Groups on start_engine or end engine date (IN/OUT) - Defult  : IN (Injection Rate)
-|       engine   : Engine name                                        - Default : %
 |       interval : Interval wiideness (in seconds)                    - Default : 60
+|       engine   : Engine name                                        - Default : %
 |       
 +---------------------------------------------------------------------------------------
        ');
@@ -51,13 +51,13 @@ define end_date_FR="case when '&P2' is null then sysdate else to_date('&P2','dd/
 --
 define mode="case when '&P3' is null then 'IN' else upper('&P3') end"
 --
---  Engine name
---
-define engineName="case when '&P4' is null then '%' else '&P4' end"
---
 -- Case number grouping by interval
 --
-define interval_size="case when '&P5' is null then 60 else &P5 end"
+define interval_size="case when '&P4' is null then 60 else &P4 end"
+--
+--  Engine name
+--
+define engineName="case when '&P5' is null then '%' else '&P5' end"
 
 
 define epoch="cast(to_timestamp_tz('1970-01-01 GMT', 'YYYY-MM-DD TZD') as date)"
@@ -183,9 +183,9 @@ with allHist as ( /* ********************************************************** 
              *  be used to outer join the result to keep time serie)      *
              * ********************************************************** */
   select  
-    ((&start_date_FR - &epoch)*24*3600)+level secs_since_epoch
+    ((trunc(&start_date_FR) - &epoch)*24*3600)+to_number(to_char(&start_date_FR,'SSSSS'))+level-1 secs_since_epoch -- need to be very precise (no decimal part)
    from dual 
-    connect by level < (&end_date_FR - &start_date_FR)*24*3600
+    connect by level < (&end_date_FR - &start_date_FR)*24*3600 +1
 )
 ,cleanHistFull as ( /* ********************************************************** *
                      *     Add lines for missing data (no cases in the second)    *
