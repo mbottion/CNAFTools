@@ -2,7 +2,7 @@ define P1="&1"
 define P2="&2"
 define P3="&3"
 define P4="&4"
-define P5="&5"
+
 set feedback off
 set serveroutput on
 begin
@@ -51,6 +51,8 @@ define engineName="case when '&P3' is null then '%' else '&P3' end"
 define interval_size="case when '&P4' is null then 60 else to_number('&P4') end"
 
 
+define epoch="cast(to_timestamp_tz('1970-01-01 GMT', 'YYYY-MM-DD TZD') as date)"
+
 -- -----------------------------------------------------------------
 -- Columns formats
 -- -----------------------------------------------------------------
@@ -72,7 +74,10 @@ compute sum label "Sums" of nb_cases nb_calls on report
 -- -----------------------------------------------------------------
 -- SQL
 -- -----------------------------------------------------------------
-with allHist as (
+with allHist as ( /* ********************************************************** *
+                   *    Aggregate all OPA DATA from the dashboard regardless    *
+                   * of the schema they come from (Application view of OPA)     *
+                   * ********************************************************** */
                 SELECT
                     'TEC' AS SCHEMA_NAME      , INSTANCE_ENGINE_NAME     , ENGINE_NAME        , PRESTATION_NAME
                   , TASK_NUM                  , LOT_NUM                  , START_BUILD_JSON   , END_BUILD_JSON
@@ -136,13 +141,16 @@ with allHist as (
                   , ROUND(dbms_lob.getlength(OUT_JSON_OPA) / 1024 / 1024, 2) AS SIZE_OUT_MB
                 FROM SYN1.S_DASHBOARD_HIST_OPA
                 )
-,cleanHist as (
+,cleanHist as ( /* ********************************************************** *
+                 *   Calculate needed valuses, extract data from strings      *
+                 * and apply restrictions if needed                           *
+                 * ********************************************************** */
       SELECT  /*+ PARALLEL */
          ID_TDB_INTERFACE
         ,ENGINE_NAME
         ,start_call_engine
-        ,(trunc(start_call_engine) - to_date('01/01/1970','dd/mm/yyyy'))*24*3600+to_number(to_char(start_call_engine,'SSSSS')) secs_since_epoch
-        --,(trunc(end_call_engine) - to_date('01/01/1970','dd/mm/yyyy'))*24*3600+to_number(to_char(end_call_engine,'SSSSS')) secs_since_epoch
+        ,(trunc(start_call_engine) - &epoch)*24*3600+to_number(to_char(start_call_engine,'SSSSS')) secs_since_epoch_opa
+        --,(trunc(end_call_engine) - to_date('01/01/1970','dd/mm/yyyy'))*24*3600+to_number(to_char(end_call_engine,'SSSSS')) secs_since_epoch_opa
         ,EXTRACT(SECOND FROM(END_CALL_ENGINE-START_CALL_ENGINE) DAY TO SECOND) AS TOTAL_OPA
         ,to_number(REPLACE(TRIM(SUBSTR(SUMMARY,INSTR(SUMMARY,':',1, 1)+1, INSTR(SUMMARY,'-',1, 2) -INSTR(SUMMARY,':',1, 1)-1)),',','.')) AS CasesRead
         ,to_number(REPLACE(TRIM(SUBSTR(SUMMARY,INSTR(SUMMARY,':',1, 2)+1, INSTR(SUMMARY,'-',1, 3) -INSTR(SUMMARY,':',1, 2)-1)),',','.')) AS CasesProcessed
@@ -159,27 +167,46 @@ with allHist as (
       AND START_BUILD_JSON <= &end_date_FR
       AND ENGINE_NAME like &engineName
       )
-,AllData as (
+,compl as ( /* ********************************************************** *
+             *    Liste a line for each second in the period (wil         *
+             *  be used to outer join the result to keep time serie)      *
+             * ********************************************************** */
+  select  
+    ((&start_date_FR - &epoch)*24*3600)+level secs_since_epoch
+   from dual 
+    connect by level < (&end_date_FR - &start_date_FR)*24*3600
+)
+,cleanHistFull as ( /* ********************************************************** *
+                     *     Add lines for missing data (no cases in the second)    *
+                     * ********************************************************** */
+  select 
+     compl.secs_since_epoch
+     ,ch.*
+  from
+    compl compl
+  left outer join cleanHist ch on (compl.secs_since_epoch = ch.secs_since_epoch_opa)
+ )
+,AllData as ( /* ********************************************************** *
+               *     Reconvert to dates and create analysis intervals       *
+               * ********************************************************** */
   SELECT
-     TO_TIMESTAMP('1970-01-01 00:00:00.000', 'YYYY-MM-DD hh24:mi:SS.FF3')  
-                 + numtodsinterval(floor((secs_since_epoch/&interval_size))*&interval_size, 'SECOND') start_period
---    ,TO_TIMESTAMP('1970-01-01 00:00:00.000', 'YYYY-MM-DD hh24:mi:SS.FF3')  
---                 + numtodsinterval((floor((secs_since_epoch/&interval_size)+1)*&interval_size)-1, 'SECOND') end_period
+       &epoch + numtodsinterval(floor((secs_since_epoch/&interval_size))*&interval_size, 'SECOND') start_period
+     , &epoch + numtodsinterval((floor((secs_since_epoch/&interval_size)+1)*&interval_size)-1, 'SECOND') end_period
     ,ch2.*
   from
-    CleanHist ch2
+    CleanHistFull ch2
   )
 select
-   to_char(start_period,'dd/mm/yyyy hh24:mi:ss')                        start_period
---  ,to_char(end_period,'dd/mm/yyyy hh24:mi:ss')                        end_period
-  ,count(*)                                                             nb_calls
-  ,count(*)/(&interval_size/60)                                         nb_calls_per_minute
-  ,sum(casesRead)                                                       nb_cases
-  ,sum(casesRead)/(&interval_size/60)                                   nb_cases_per_minute
-  ,avg(total_opa)                                                       avg_time
-  ,max(total_opa)                                                       max_time
-  ,'.' || rpad(rpad('=',ceil(avg(total_opa)/4),'='),15,' ') || '.'      avg_time_bar
-  ,'.' || rpad(rpad('=',ceil(max(total_opa)/4),'='),30,' ') || '.'      max_time_bar
+   to_char(start_period,'dd/mm/yyyy hh24:mi:ss')                                     start_period
+--  ,to_char(end_period,'hh24:mi:ss')                                                  end_period
+  , sum(case when secs_since_epoch_opa is null then 0 else 1 end)                    nb_calls            -- Count only NOT NULL VALUES
+  ,sum(case when secs_since_epoch_opa is null then 0 else 1 end)/(&interval_size/60) nb_calls_per_minute -- Count only NOT NULL VALUES
+  ,sum(casesRead)                                                                    nb_cases
+  ,sum(casesRead)/(&interval_size/60)                                                nb_cases_per_minute
+  ,avg(total_opa)                                                                    avg_time
+  ,max(total_opa)                                                                    max_time
+  ,'.' || rpad(rpad('=',ceil(avg(total_opa)/4),'='),15,' ') || '.'                   avg_time_bar
+  ,'.' || rpad(rpad('=',ceil(max(total_opa)/4),'='),30,' ') || '.'                   max_time_bar
 from 
   allData
 group by
@@ -188,5 +215,3 @@ group by
 order 
   by start_period
 /
-
-
