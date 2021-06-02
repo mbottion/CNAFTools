@@ -80,8 +80,6 @@ column max_time_bar        format    a32          trunc heading "Max Max=120+ Se
 break on report
 compute sum label "Sums" of nb_cases nb_calls on report 
 
-set verify on
-
 -- -----------------------------------------------------------------
 -- SQL
 -- -----------------------------------------------------------------
