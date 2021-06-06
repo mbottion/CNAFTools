@@ -19,7 +19,7 @@ mkstore -wrl $dir -list
 echo
 echo "==================================="
 echo
-mkstore -wrl $dir -viewEntry passwd
+mkstore -wrl $dir -viewEntry $info
 echo
 echo "==================================="
 echo
