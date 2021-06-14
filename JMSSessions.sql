@@ -10,7 +10,7 @@ select
    machine
   ,inst_id
   ,username
-  ,row_number() over (partition by machine, inst_id, username order by logon_time) || '/'|| count (*) over (partition by machine, inst_id, username) num_sess
+  ,row_number() over (partition by machine, inst_id, username order by logon_time) || ' of '|| count (*) over (partition by machine, inst_id, username) num_sess
   ,to_char(logon_time,'dd/mm/yyyy hh24:mi:ss')
   ,seconds_in_wait
   ,round((sysdate-logon_time)*24*3600) since_logon
