@@ -12,6 +12,7 @@ begin
 |   Parameters :
 |       start    : Analysis start date (dd/mm/yyyy [hh24:mi:ss])      - Default : Noon (Today or yesterday)
 |       end      : Analysis end   date (dd/mm/yyyy [hh24:mi:ss])      - Default : Now
+|       groupe   : If HOUR, gives results per hour                    - Default : No grouping
 |       
 +---------------------------------------------------------------------------------------
        ');
