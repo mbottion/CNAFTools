@@ -27,7 +27,7 @@ begin
 |       start    : Analysis start date (dd/mm/yyyy [hh24:mi:ss])      - Default : Noon (Today or yesterday)
 |       end      : Analysis end date   (dd/mm/yyyy [hh24:mi:ss])      - Default : now
 |       mode     : Groups on start_engine or end engine date (IN/OUT) - Defult  : IN (Injection Rate)
-|       interval : Interval wiideness (in seconds)                    - Default : 60
+|       interval : Interval wideness (in seconds)                     - Default : 3600
 |       engine   : Engine name                                        - Default : %
 |       
 +---------------------------------------------------------------------------------------
@@ -53,7 +53,7 @@ define mode="case when '&P3' is null then 'IN' else upper('&P3') end"
 --
 -- Case number grouping by interval
 --
-define interval_size="case when '&P4' is null then 60 else &P4 end"
+define interval_size="case when '&P4' is null then 3600 else to_number('&P4') end"
 --
 --  Engine name
 --
