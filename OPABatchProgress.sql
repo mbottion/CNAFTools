@@ -35,7 +35,15 @@ define        groupe="case when '&3' is null then 'All'               else upper
 -- ===============================
 -- Dossiers reçus + # dossiers distinct avec des anomalies
 
-break on "Date Debut" on "Date Fin"
+column dat_deb   format a20          heading "Date debut"
+column dat_fin   format a20          heading "Date fin"
+column grp_recu  format 9999         heading "Intervalle"
+column nb_recu   format 999G999G999  heading "#Doss. traites"
+column nb_ano    format 999G999      heading "#Doss. distincts en anomalies"
+column pct_ano   format 99D99        heading "% Doss. rejetes"
+
+break on "Date Debut" on "Date Fin" on report
+compute sum of nb_recu nb_ano  on report 
 
 WITH RECEIVE AS
         (
@@ -78,12 +86,12 @@ WITH RECEIVE AS
                             'All'
                         end
         )
-SELECT  &start_date_FR                        AS "Date debut"                   ,
-        &end_date_FR                          AS "Date fin"                     ,
-        grp_recu                              AS "Intervalle"                   ,
-        T1.NB_RECU                            AS "#Doss. traites"               ,
-        T2.NB_ANO                             AS "#Doss. distincts en anomalies",
-        ROUND((T2.NB_ANO/T1.NB_RECU) * 100,4) AS "% Doss. rejetes"
+SELECT  &start_date_FR                        dat_deb
+       ,&end_date_FR                          dat_fin
+       ,grp_recu                              
+       ,T1.NB_RECU                            
+       ,T2.NB_ANO                             
+       ,ROUND((T2.NB_ANO/T1.NB_RECU) * 100,4) pct_ano
 FROM    RECEIVE T1,
         ANO T2
 where 
