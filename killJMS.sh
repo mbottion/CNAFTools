@@ -43,7 +43,7 @@ with sess as (
       gv\$session s
     where
           inst_id=(select instance_number from v\$instance)
-      and upper(substr(machine,4,3)) = '$sessClient' and username in ('$sessUserName')
+      and upper(substr(machine,4,3)) = '$sessClient' and username in ($sessUserNames)
     order by 1 desc)
 select 
    s.sid || ',' || s.serial# || ',@'|| s.inst_id                           ora_session
@@ -64,9 +64,64 @@ order by idle_since_hours ASC
 /
   "
 }
+
+infoSessions()
+{
+  exec_sql "/ as sysdba" "
+col inst_id             format 999            heading \"Inst.\"
+col idle_since_hours    format 09D99          heading \"Inactive depuis (h)\"
+col machine             format a40            heading \"Source\"
+col username            format a10            heading \"User\"
+col first_logged        format a20            heading \"Premier Logon\"
+col last_exec           format a20            heading \"Derniere Exec.\"
+col nb_sess             format 999G999        heading \"Nb sess dans heure\"
+
+set head on
+set pages 2000
+
+break on inst_id skip 1 on report
+compute sum of nb_sess on inst_id report
+
+alter session set nls_territory=FRANCE ;
+with sess as (
+select 
+   (floor(last_call_et/3600)*3600)/3600                                 idle_since_hours
+  ,inst_id
+  ,machine
+  ,username
+  ,prev_exec_start
+  ,logon_time
+from 
+  gv\$session s
+where
+    upper(substr(machine,4,3)) = '$sessClient' and username in ($sessUserNames)
+)
+select 
+   inst_id
+  ,idle_since_hours
+  ,machine
+  ,username
+  ,to_char(min(logon_time),'dd/mm/yyyy hh24:mi:ss')          first_logged
+  ,to_char(max(prev_exec_start),'dd/mm/yyyy hh24:mi:ss')     last_exec
+  ,count(*)                                                  nb_sess
+from
+  sess
+group by
+   inst_id
+  ,idle_since_hours
+  ,machine
+  ,username
+/
+  "
+}
 listSessions()
 {
+  
   startRun "$mode des sessions avec plus de $inactiveSince heures" "d'inactivite sur $(hostname -s)" "Base : $ORACLE_SID"
+  startStep "Toutes les sessions par duree d'inactivite"
+  infoSessions
+  endStep
+  startStep "Liste des sessions et kill le cas echeant"
   m=${1^^}
   t="-------------------------------------------------------------------------------------"
   printf "+-%-25.25s-+-%-10.10s-+-%-10.10s-+-%-20.20s-+-%-10.10s-+" "$t" "$t" "$t" "$t" "$t" ; echo
@@ -119,6 +174,7 @@ listSessions()
   else
     echo "       Sessions tuees : $sessionsToKill"
   fi
+  endStep
   endRun
 }
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -299,12 +355,22 @@ usage()
  echo " $*
 
 Usage :
- $SCRIPT [-K] [-t heures]
+ $SCRIPT [-K|-I] [-L] [-t heures]
          [-h|-?]
 
+         Liste ou tue les sessions inactives depuis un certain temps. Par defaut, les 
+         sessions sont simplement affichées par par tuees. Le tableau de detail des sessions
+         liste les sessions un peu en dessous de la duree d'inactivite precisee.
+
+         Le tableau des sessions par heure quant a lui prend en compte
+         toutes les sessions.
+
+         L'option -I permet de n'avoir que les sessions par duree d'inactivite
+
          -t heures    : Selectionne les sessions inactives depuis 'heures'
-                        heures comme candidates au kill 
+                        heures comme candidates au kill -- Defaut : 6 heures
          -K           : Tue effectivement les sessions et les processes
+         -I           : Informations sur les sessions seulement
          -L           : Execute sur le serveur local seulement
          -?|-h        : Aide
 
@@ -324,7 +390,7 @@ SCRIPT=killJMS.sh
 
 #[ "$1" = "" ] && usage
 toShift=0
-while getopts t:KLh opt
+while getopts t:KLIh opt
 do
   case $opt in
    # --------- Selection des sessions -------------------------
@@ -332,6 +398,7 @@ do
    # --------- Modes de fonctionnement ------------------------
    K)   mode=KILL                ; toShift=$(($toShift + 1)) ;;
    L)   LOCAL=Y                  ; toShift=$(($toShift + 1)) ;;
+   I)   mode=INFO                ; toShift=$(($toShift + 1)) ;;
    ?|h) usage "Aide demandee";;
   esac
 done
@@ -343,12 +410,13 @@ shift $toShift
 # -----------------------------------------------------------------------------
 mode=${mode:-LIST}                             # Par défaut LIST
 LOCAL=${LOCAL:-N}
-inactiveSince=${inactiveSince:-12}
+inactiveSince=${inactiveSince:-6}
 inactiveSince=$(echo $inactiveSince | sed -e "s;,;.;g")
 
+[ "$mode" = "INFO" ] && LOCAL="Y"
 [ "$mode" = "KILL" ] && argOtherServer="-K"
 argOtherServer="$argOtherServer -t $inactiveSince -L"
-sessUserName=TEC
+sessUserNames="'TEC','MES'"
 sessClient=JMS
 # -----------------------------------------------------------------------------
 #
@@ -365,6 +433,7 @@ then
     KILL)         LOG_FILE=LOG_FILE=$LOG_DIR/killJMS_${ORACLE_SID}_${DAT}.log ;;
     TEST)         LOG_FILE=/dev/null                                       ;;
     LIST)         LOG_FILE=/dev/null                                       ;;
+    INFO)         LOG_FILE=/dev/null                                       ;;
     *)            die "Mode inconnu"                                       ;;
   esac
 fi
@@ -383,6 +452,7 @@ checkDir -silent $LOG_DIR || die "$LOG_DIR is incorrect"
 case $mode in
  KILL)           listSessions KILL       2>&1 | tee $LOG_FILE ;;
  LIST)           listSessions LIST       2>&1 | tee $LOG_FILE ;;
+ INFO)           infoSessions            2>&1 | tee $LOG_FILE ;;
  TEST)           testUnit       2>&1 | tee $LOG_FILE ;;
 esac
 
@@ -412,4 +482,5 @@ then
   scp -o StrictHostKeyChecking=no -q $scriptPath ${autreNoeud}:$scriptPath || die "Impossible de recopier le script"
   envFile=/home/oracle/$(echo $ORACLE_SID | sed -e "s;.$;;").env
   ssh -o StrictHostKeyChecking=no $autreNoeud "ORACLE_SID=None ; . $envFile ; $scriptPath $argOtherServer"
+
 fi
