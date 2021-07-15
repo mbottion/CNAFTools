@@ -410,7 +410,7 @@ shift $toShift
 # -----------------------------------------------------------------------------
 mode=${mode:-LIST}                             # Par défaut LIST
 LOCAL=${LOCAL:-N}
-inactiveSince=${inactiveSince:-6}
+inactiveSince=${inactiveSince:-4}
 inactiveSince=$(echo $inactiveSince | sed -e "s;,;.;g")
 
 [ "$mode" = "INFO" ] && LOCAL="Y"
@@ -430,7 +430,7 @@ LOG_DIR=$BASEDIR/$ORACLE_SID                  # Log DIR
 if [ "$LOG_FILE" = "" ]
 then
   case $mode in
-    KILL)         LOG_FILE=LOG_FILE=$LOG_DIR/killJMS_${ORACLE_SID}_${DAT}.log ;;
+    KILL)         LOG_FILE=/dev/null                                       ;;
     TEST)         LOG_FILE=/dev/null                                       ;;
     LIST)         LOG_FILE=/dev/null                                       ;;
     INFO)         LOG_FILE=/dev/null                                       ;;
