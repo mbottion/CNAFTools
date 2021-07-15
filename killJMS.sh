@@ -1,4 +1,4 @@
-VERSION=0.1
+VERSION=1.0
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #
 #   Appelé par l'option -T, permet de tester des parties de script
@@ -359,18 +359,32 @@ Usage :
          [-h|-?]
 
          Liste ou tue les sessions inactives depuis un certain temps. Par defaut, les 
-         sessions sont simplement affichées par par tuees. Le tableau de detail des sessions
+         sessions sont simplement affichées et pas tuees. Le tableau de detail des sessions
          liste les sessions un peu en dessous de la duree d'inactivite precisee.
 
-         Le tableau des sessions par heure quant a lui prend en compte
+         Sans options, ce script réalise toutes les operations du KILL, mais sans réellement
+         tuer les sessions, pour tuer, il faut spécifier -K.
+         
+         Le tableau des sessions par heure (-I) quant a lui prend en compte
          toutes les sessions.
 
          L'option -I permet de n'avoir que les sessions par duree d'inactivite
 
+         Lorsqu'une session doit être tuee, on affiche le détail, et en particulier
+         la machine et la socket source.
+
+         Le script doit etre lance sur l'un des noeuds de la machine hebergeant la base de 
+         donnees, après avoir positionne l'environnement. Pour l'option KILL ou LIST, 
+         le script se recopie et se lance automatiquement sur le deuxième noeud.
+
+         L'option INFO, quant a elle n'a besoin de s'executer que sur un seul noeud.
+
+
          -t heures    : Selectionne les sessions inactives depuis 'heures'
                         heures comme candidates au kill -- Defaut : 6 heures
          -K           : Tue effectivement les sessions et les processes
-         -I           : Informations sur les sessions seulement
+         -I           : Informations sur les sessions seulement (nombre de sessions
+                        par instance/source)
          -L           : Execute sur le serveur local seulement
          -?|-h        : Aide
 
@@ -410,7 +424,7 @@ shift $toShift
 # -----------------------------------------------------------------------------
 mode=${mode:-LIST}                             # Par défaut LIST
 LOCAL=${LOCAL:-N}
-inactiveSince=${inactiveSince:-4}
+inactiveSince=${inactiveSince:-6}
 inactiveSince=$(echo $inactiveSince | sed -e "s;,;.;g")
 
 [ "$mode" = "INFO" ] && LOCAL="Y"
@@ -453,7 +467,7 @@ case $mode in
  KILL)           listSessions KILL       2>&1 | tee $LOG_FILE ;;
  LIST)           listSessions LIST       2>&1 | tee $LOG_FILE ;;
  INFO)           infoSessions            2>&1 | tee $LOG_FILE ;;
- TEST)           testUnit       2>&1 | tee $LOG_FILE ;;
+ TEST)           testUnit                2>&1 | tee $LOG_FILE ;;
 esac
 
 if [ "$LOCAL" != "Y" ]
