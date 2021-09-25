@@ -1,11 +1,15 @@
 set pages 2000
 set lines 4000
-column machine           format a40
+column machine           format a20 trunc
 column inst_id           format 99
+column sid               format 99999
+column audsid            format 9999999999
+column process           format a15
+column serial#           format 99999
 column username          format a10
 column num_sess          format a10
 column logon_time        format a20
-column prev_exec_time    format a20
+column prev_exec_time    format a10
 column seconds_in_wait   format 999G999G999
 column since_logon       format 999G999G999
 column used              format 999G999G999
@@ -15,6 +19,10 @@ column sql_text          format a400
 select
    se.machine
   ,se.inst_id
+  --,se.audsid
+  ,se.sid
+  ,se.serial#
+  ,se.process
   ,se.username
   ,row_number() over (partition by se.machine, se.inst_id, se.username order by se.logon_time) ||
      ' of '|| count (*) over (partition by se.machine, se.inst_id, se.username)                    num_sess
@@ -22,10 +30,11 @@ select
   ,se.seconds_in_wait   
   ,round((sysdate-se.logon_time)*24*3600)                                                          since_logon
   ,round(((sysdate-se.logon_time)*24*3600)) - se.seconds_in_wait                                   used
-  ,to_char(se.prev_exec_start,'dd/mm/yyyy hh24:mi:ss')                                             prev_exec_time
-  ,se.prev_sql_id
-  ,sq.sql_text
-  ,se.sql_id
+  ,to_char(se.prev_exec_start,'hh24:mi:ss')                                                        prev_exec_time
+--  ,se.prev_sql_id
+  --,sq.sql_text
+--  ,se.sql_id
+--  ,se.event
 --  ,se.*
 from 
   gv$session se
