@@ -111,6 +111,11 @@ group by
   ,idle_since_hours
   ,machine
   ,username
+order by
+   inst_id
+  ,idle_since_hours
+  ,machine
+  ,username
 /
   "
 }
