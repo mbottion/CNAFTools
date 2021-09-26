@@ -38,8 +38,8 @@ done
 i=0
 while [ $i -lt $NB_HOURS ]
 do
-  start=$(date -d "$START_DATE + $i hours" "+%d/%m/%Y %H:%M:%S")
-  end=$(date -d "$START_DATE + $(($i + 1)) hours" "+%d/%m/%Y %H:%M:%S")
+  start=$(date -d "$START_DATE + $i hours" "+%d/%m/%Y %H:%M:%S") || die "Date ERROR"
+  end=$(date -d "$START_DATE + $(($i + 1)) hours" "+%d/%m/%Y %H:%M:%S") || die "Date ERROR"
   echo "==================================================================="
   echo " From : $start To : $end ($i)"
   echo "===+===+==========================================================="
