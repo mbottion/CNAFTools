@@ -103,6 +103,7 @@ column "&I7_Label" format a10      trunc
 column "&I8_Label" format a10      trunc
 column "&I9_Label" format a10      trunc
 
+alter session set NLS_NUMERIC_CHARACTERS='. ' ;
 
 Prompt ====================================================================================
 Prompt &report_title
