@@ -80,6 +80,18 @@ column max_time_bar        format    a32          trunc heading "Max Max=120+ Se
 break on report
 compute sum label "Sums" of nb_cases nb_calls on report 
 
+set heading off
+select 
+  '' || chr(10) ||
+  '' || chr(10)||
+  '    NSI-OPA exchange rate and aerage/max times : ' || chr(10)||
+  '    ==========================================' || chr(10)||
+  '' || chr(10)||
+  '       Direction : ' || case &mode when 'IN' then ' NSI --> OPA' else ' OPA --> NSI' end ||
+  '' || chr(10)||
+  '' a
+from dual ;
+set heading on
 -- -----------------------------------------------------------------
 -- SQL
 -- -----------------------------------------------------------------
