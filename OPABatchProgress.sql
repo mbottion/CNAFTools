@@ -42,7 +42,7 @@ column nb_recu   format 999G999G999  heading "#Doss. traites"
 column nb_ano    format 999G999      heading "#Doss. distincts en anomalies"
 column pct_ano   format 99D99        heading "% Doss. rejetes"
 
-break on "Date Debut" on "Date Fin" on report
+break on dat_deb on dat_fin on report
 compute sum of nb_recu nb_ano  on report 
 
 WITH RECEIVE AS
@@ -50,19 +50,31 @@ WITH RECEIVE AS
                 SELECT  SUM(NOMBRE_DEMANDES) AS NB_RECU,
                         case 
                           when &groupe = 'HOUR' then 
-                            to_char(time_creation,'HH24') || ':00 --> ' || to_char(time_creation+1/24,'HH24') || ':00'
+                            to_char(time_creation,'dd/mm/yyyy HH24') || ':00 --> ' || to_char(time_creation+1/24,'dd/mm/yyyy HH24') || ':00'
                           else
                             'All'
                         end as grp_recu
+                       ,case
+                        when &groupe = 'HOUR' then
+                          to_char(time_creation,'YYYYMMDDHH24') 
+                        else
+                          '0000'
+                        end as start_grp_recu
                 FROM    TEC.STG_IN_JMS
                 WHERE   STATUS            ='LOADED'
                         AND TIME_CREATION between  &start_date_FR and &end_date_FR
                 group by
                         case 
                           when &groupe = 'HOUR' then 
-                            to_char(time_creation,'HH24') || ':00 --> ' || to_char(time_creation+1/24,'HH24') || ':00'
+                            to_char(time_creation,'dd/mm/yyyy HH24') || ':00 --> ' || to_char(time_creation+1/24,'dd/mm/yyyy HH24') || ':00'
                           else
                             'All'
+                        end
+                       ,case
+                        when &groupe = 'HOUR' then
+                          to_char(time_creation,'YYYYMMDDHH24') 
+                        else
+                          '0000'
                         end
         )
         ,
@@ -71,19 +83,31 @@ WITH RECEIVE AS
                 SELECT  NVL(COUNT(DISTINCT numeroDossier), 0) AS NB_ANO,
                         case 
                           when &groupe = 'HOUR' then 
-                            to_char(time_creation,'HH24') || ':00 --> ' || to_char(time_creation+1/24,'HH24') || ':00'
+                            to_char(time_creation,'dd/mm/yyyy HH24') || ':00 --> ' || to_char(time_creation+1/24,'dd/mm/yyyy HH24') || ':00'
                           else
                             'All'
-                        end as grp_ano
+                        end grp_ano
+                       ,case
+                        when &groupe = 'HOUR' then
+                          to_char(time_creation,'YYYYMMDDHH24') 
+                        else
+                          '0000'
+                        end start_grp_ano
                 FROM    TEC.STG_OUT_ANO_AL,
                         JSON_TABLE (MESSAGE_JSON, '$[*]' COLUMNS ( numeroDossier NUMBER PATH '$.identificationTraitementErreur.indicateursSuiviMatriculaire.numeroDossier'))
                 WHERE   TIME_CREATION between  &start_date_FR and &end_date_FR
                 group by
                         case 
                           when &groupe = 'HOUR' then 
-                            to_char(time_creation,'HH24') || ':00 --> ' || to_char(time_creation+1/24,'HH24') || ':00'
+                            to_char(time_creation,'dd/mm/yyyy HH24') || ':00 --> ' || to_char(time_creation+1/24,'dd/mm/yyyy HH24') || ':00'
                           else
                             'All'
+                        end
+                       ,case
+                        when &groupe = 'HOUR' then
+                          to_char(time_creation,'YYYYMMDDHH24') 
+                        else
+                          '0000'
                         end
         )
 SELECT  &start_date_FR                        dat_deb
@@ -95,6 +119,6 @@ SELECT  &start_date_FR                        dat_deb
 FROM    RECEIVE T1,
         ANO T2
 where 
-   t1.grp_recu=t2.grp_ano
-order by 3
+   t1.start_grp_recu=t2.start_grp_ano
+order by start_grp_recu
 /
