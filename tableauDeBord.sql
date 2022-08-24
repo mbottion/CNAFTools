@@ -86,9 +86,11 @@ WITH tmp AS (
 --    t1.id_tdb,
         t2.schema_name,
 --    code_int,
-        to_char(t1.dtd, 'dd/mm/yyyy hh24:mi:ss') start_date,
---    t2.dtd_lancement,
---    t2.dtf_lancement,
+        to_char(t1.dtd, 'dd/mm hh24:mi:ss') start_date,
+        CASE t1.temps
+        WHEN '--EN COURS--' THEN 'RUN'
+        else null
+        end "St",
         CASE t1.temps
             WHEN '--EN COURS--' THEN
                 ltrim(to_char(t1.dossiers, '999G999G990'))
@@ -129,5 +131,5 @@ FROM
         IN ( 'LIQ1' AS "Liq1", 'LIQ2' AS "Liq2", 'LIQF1' AS "Liqf1", 'LIQF2' AS "Liqf2" )
     )
 ORDER BY
-    to_date(start_date, 'dd/mm/yyyy hh24:mi:ss')
+    to_date(start_date, 'dd/mm hh24:mi:ss')
 /
