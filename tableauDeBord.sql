@@ -93,8 +93,9 @@ WITH tmp AS (
             WHEN '--EN COURS--' THEN
                 ltrim(to_char(t1.dossiers, '999G999G990'))
                 || ' d '
-                || ' En cours '
-                || ' (Suivant : '
+                --|| ' En cours '
+                || ' [' || trunc((sysdate-to_date(to_char(t1.dtd,'dd/mm/yyyy hh24:mi:ss'),'dd/mm/yyyy hh24:mi:ss'))*24*60) || '+ min.]'
+                || ' (Suiv. : '
                 || ltrim(to_char(t3.en_attente, '999G990'))
                 || ')'
             ELSE
