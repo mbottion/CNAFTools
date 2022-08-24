@@ -14,7 +14,7 @@ for s in TEC LIQ1 LIQ2 LIQF1 LIQF2 SYN1 ACE1
 do
   mkdir -p $DIR/$s
   echo "Extractiong DDL for $s ......" 
-sqlplus -s / as sysdba <<%% | die "SQL Error when processing $s"
+sqlplus -s / as sysdba >/dev/null <<%% || { [ -f $DIR/$s/full.sql ] && tail -40  $DIR/$s/full.sql ; die "SQL Error when processing $s"
 whenever sqlerror exit failure
 
 set long 100000
@@ -26,7 +26,7 @@ set feedback off
 col file_name format a50 newline
 alter session set container=$PDB ;
 
-spool $s/full.sql
+spool $DIR/$s/full.sql
 
 set long 999999999
 
@@ -73,7 +73,7 @@ from
         --Exclude overflow segments, their DDL is part of their parent table.
         and (owner, object_name) not in (select owner, table_name from dba_tables where iot_type = 'IOT_OVERFLOW')
         and not (object_type='SEQUENCE' and object_name like '%ISEQ%')
-        and object_type != 'PROCOBJ'
+        and object_type not in ('JOB','RULE SET','RULE','EVALUATION CONTEXT','CREDENTIAL','CHAIN','PROGRAM') 
         --and object_name like 'PKG_SYNCHRO%'
 )
 order by owner, object_type, object_name;
@@ -81,7 +81,7 @@ order by owner, object_type, object_name;
 spool off
 quit
 %%
-  cat $s/full.sql  |  awk '
+  cat $DIR/$s/full.sql  |  awk '
 BEGIN {outfile="'$DIR/$s'/null.txt"}
 /OUTFILE/ {
   outfile=$2 
