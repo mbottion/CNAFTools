@@ -90,7 +90,7 @@ BEGIN {outfile="'$DIR/$s'/null.txt"}
 }
 { print >> outfile }
 '
-[ $? -ne 0 ] && die "Transformation Error"
+[ $? -ne 0 ] && die "Transformation Error" || rm -f $DIR/$s/full.sql
 
 done
 tar cvzf DDL_${PDB}_${d}.tgz $DIR && rm -rf $DIR
