@@ -14,7 +14,7 @@ for s in TEC LIQ1 LIQ2 LIQF1 LIQF2 SYN1 ACE1
 do
   mkdir -p $DIR/$s
   echo "Extractiong DDL for $s ......" 
-sqlplus -s / as sysdba >/dev/null <<%% || { [ -f $DIR/$s/full.sql ] && tail -40  $DIR/$s/full.sql ; die "SQL Error when processing $s"
+sqlplus -s / as sysdba >/dev/null <<%% || { [ -f $DIR/$s/full.sql ] && tail -40  $DIR/$s/full.sql ; die "SQL Error when processing $s" ; }
 whenever sqlerror exit failure
 
 set long 100000
