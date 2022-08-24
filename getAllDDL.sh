@@ -94,4 +94,4 @@ BEGIN {outfile="'$DIR/$s'/null.txt"}
 
 done
 tar cvzf DDL_${PDB}_${d}.tgz $DIR && rm -rf $DIR
-echo "DDL stored into : DDL_${d}.tgz"
+echo "DDL stored into : DDL_${PDB}_${d}.tgz"
