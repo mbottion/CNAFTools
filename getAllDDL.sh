@@ -74,6 +74,7 @@ from
         --Exclude overflow segments, their DDL is part of their parent table.
         and (owner, object_name) not in (select owner, table_name from dba_tables where iot_type = 'IOT_OVERFLOW')
         and not (object_type='SEQUENCE' and object_name like '%ISEQ%')
+        and not (object_type='INDEX' and object_name like 'SYS_IL%')
         and object_type not in ('JOB','RULE SET','RULE','EVALUATION CONTEXT','CREDENTIAL','CHAIN','PROGRAM') 
         --and object_name like 'PKG_SYNCHRO%'
 )
