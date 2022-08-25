@@ -23,6 +23,7 @@ set echo off
 set pagesize 0
 set verify off
 set feedback off
+set lines 500
 col file_name format a100 newline
 set trimspool on
 alter session set container=$PDB ;
