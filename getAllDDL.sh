@@ -23,7 +23,8 @@ set echo off
 set pagesize 0
 set verify off
 set feedback off
-col file_name format a50 newline
+col file_name format a100 newline
+set trimspool on
 alter session set container=$PDB ;
 
 spool $DIR/$s/full.sql
