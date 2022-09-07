@@ -42,6 +42,9 @@ col LIQF1_V format a12     heading "d/min"
 col LIQF2_D format a9      heading "LIQF2 (d)"
 col LIQF2_T format a8      heading "Duree"
 col LIQF2_V format a12     heading "d/min"
+col SYN1_D format a9      heading "LIQF2 (d)"
+col SYN1_T format a8      heading "Duree"
+col SYN1_V format a12     heading "d/min"
 
 alter session set nls_numeric_characters=', ';
 
@@ -118,7 +121,7 @@ WITH tmp AS (
     INNER JOIN tec.tdb_lancement_interface t2 ON (t2.id_lancement = t1.id_tdb)
     LEFT OUTER JOIN tmp                         t3 ON (t3.status = 'TO_LOAD_' || t2.schema_name)
   WHERE
-      code_int = 'CALCUL_AL_BATCH'
+      code_int in ('CALCUL_AL_BATCH','SYNCHRO_FOYER')
     AND t1.dtd BETWEEN &start_date_fr AND &end_date_fr
 --    T2.STATUT_LANCEMENT  in ('Succes','En Cours') AND
 --    AND T1.TEMPS ='--EN COURS--'
@@ -131,7 +134,7 @@ FROM
     MAX (dossiers)
   AS d,MAX (duree) AS t,MAX (vitesse) AS v
     FOR schema_name
-    IN ('LIQ1' AS liq1,'LIQ2' AS liq2,'LIQF1' AS liqf1,'LIQF2' AS liqf2)
+    IN ('LIQ1' AS liq1,'LIQ2' AS liq2,'LIQF1' AS liqf1,'LIQF2' AS liqf2,'SYN1' AS syn1)
   )
 ORDER BY
   to_date (start_date,'dd/mm hh24:mi:ss')
