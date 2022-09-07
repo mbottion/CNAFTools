@@ -42,9 +42,9 @@ col LIQF1_V format a12     heading "d/min"
 col LIQF2_D format a9      heading "LIQF2 (d)"
 col LIQF2_T format a8      heading "Duree"
 col LIQF2_V format a12     heading "d/min"
-col SYN1_D format a9      heading "LIQF2 (d)"
-col SYN1_T format a8      heading "Duree"
-col SYN1_V format a12     heading "d/min"
+col SYN1_D  format a9      heading "SYN1 (d)"
+col SYN1_T  format a8      heading "Duree"
+col SYN1_V  format a12     heading "d/min"
 
 alter session set nls_numeric_characters=', ';
 
