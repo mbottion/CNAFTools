@@ -29,20 +29,34 @@ end ;
 define start_date_FR="case when '&1' is null then round(sysdate) -0.5 else to_date('&1','dd/mm/yyyy hh24:mi:ss') end" 
 define   end_date_FR="case when '&2' is null then sysdate             else to_date('&2','dd/mm/yyyy hh24:mi:ss') end" 
 
+--
+--    Time avode which a loop is not "normal"
+--
+define minutes_alerte=35
+
 
 col LIQ1_D  format a9      heading "LIQ1 (d)"
+col LIQ1_A  format a2      heading "A"
 col LIQ1_T  format a8      heading "Duree"
 col LIQ1_V  format a12     heading "d/min"
 col LIQ2_D  format A9      heading "LIQ2 (d)"
+col LIQ1_A  format a2      heading "A"
 col LIQ2_T  format a8      heading "Duree"
 col LIQ2_V  format a12     heading "d/min"
 col LIQF1_D format a9      heading "LIQF1 (d)"
+col LIQF1_A format a2      heading "A"
 col LIQF1_T format a8      heading "Duree"
 col LIQF1_V format a12     heading "d/min"
 col LIQF2_D format a9      heading "LIQF2 (d)"
+col LIQF2_A format a2      heading "A"
 col LIQF2_T format a8      heading "Duree"
 col LIQF2_V format a12     heading "d/min"
+col ACE1_D  format a9      heading "ACE1 (d)"
+col ACE1_A  format a2      heading "A"
+col ACE1_T  format a8      heading "Duree"
+col ACE1_V  format a12     heading "d/min"
 col SYN1_D  format a9      heading "SYN1 (d)"
+col SYN1_A  format a2      heading "A"
 col SYN1_T  format a8      heading "Duree"
 col SYN1_V  format a12     heading "d/min"
 
@@ -116,6 +130,12 @@ WITH tmp AS (
       ELSE
         lpad (ltrim (to_char (round (dossiers / minutes),'999G990')),6)
      END                                              vitesse
+   ,CASE t1.temps
+      WHEN '--EN COURS--' THEN
+        NULL
+      ELSE
+        case when t1.minutes > &minutes_alerte  then '**' else '' end 
+     END                                              alerte
   FROM
          my_suivi_boucle t1
     INNER JOIN tec.tdb_lancement_interface t2 ON (t2.id_lancement = t1.id_tdb)
@@ -131,10 +151,9 @@ SELECT
   *
 FROM
   tdb PIVOT (
-    MAX (dossiers)
-  AS d,MAX (duree) AS t,MAX (vitesse) AS v
+    MAX (dossiers) AS d,MAX(alerte) as a ,MAX (duree) AS t,MAX (vitesse) AS v
     FOR schema_name
-    IN ('LIQ1' AS liq1,'LIQ2' AS liq2,'LIQF1' AS liqf1,'LIQF2' AS liqf2,'SYN1' AS syn1)
+    IN ('LIQ1' AS liq1,'LIQ2' AS liq2,'LIQF1' AS liqf1,'LIQF2' AS liqf2,'ACE1' AS ace1,'SYN1' as syn1)
   )
 ORDER BY
   to_date (start_date,'dd/mm hh24:mi:ss')
