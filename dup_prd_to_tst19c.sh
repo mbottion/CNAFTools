@@ -163,7 +163,7 @@ dest=tst19c
 source_pdb=BNA0PRD
 dest_pdb=BNA0T19
 dbid=1995892334
-time="2022-12-19_08:00:00"
+time="2023-01-23_08:00:00"
 para=64
 
 set -o pipefail
@@ -616,6 +616,19 @@ grant dba to rdaccenture ;
 alter user gmaccenture account unlock ;
 grant dba to gmaccenture ;"
 
+  echo 
+  echo "  - Retention a 5 jours et positionnement de la retention des AL a NONE"
+  echo 
+exec_sql "/ as sysdba" "
+alter system set db_flashback_retention_target=7200 scope=both ;
+"
+  echo "
+configure archivelog deletion policy to none ;
+CONFIGURE RETENTION POLICY TO RECOVERY WINDOW OF 5 DAYS;
+delete archivelog all ;
+yes
+show all ;
+" | rman target /
   echo
   echo "  - Attente 60 sec"
 sleep 60
